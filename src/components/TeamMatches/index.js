@@ -2,9 +2,11 @@
 import './index.css'
 import Loader from 'react-loader-spinner'
 import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css'
+import {Link} from 'react-router-dom'
 import {Component} from 'react'
 import LatestMatch from '../LatestMatch'
 import MatchCard from '../MatchCard'
+import PieChart from '../PieChart'
 
 class TeamMatches extends Component {
   state = {
@@ -54,17 +56,22 @@ class TeamMatches extends Component {
     this.setState({matchesData: updatedData, isLoading: false})
   }
 
-  renderTeamMatches = () => {
+  getNoOfMatches = value => {
     const {matchesData} = this.state
-    const {teamBannerUrl, latestMatchDetails} = matchesData
-    return (
-      <div className="team-matches-container">
-        <img src={teamBannerUrl} alt="team banner" className="team-banner" />
-        <LatestMatch latestMatch={latestMatchDetails} />
-        {this.renderRecentMatchesList()}
-      </div>
-    )
+    const {latestMatchDetails, recentMatches} = matchesData
+    console.log(latestMatchDetails)
+    const currentMatch = value === latestMatchDetails.matchStatus ? 1 : 0
+    const result =
+      recentMatches.filter(match => match.matchStatus === value).length +
+      currentMatch
+    return result
   }
+
+  generatePieChartData = () => [
+    {name: 'Won', value: this.getNoOfMatches('Won')},
+    {name: 'Lost', value: this.getNoOfMatches('Lost')},
+    {name: 'Drawn', value: this.getNoOfMatches('Drawn')},
+  ]
 
   renderRecentMatchesList = () => {
     const {matchesData} = this.state
@@ -78,6 +85,25 @@ class TeamMatches extends Component {
     )
   }
 
+  renderTeamMatches = () => {
+    const {matchesData} = this.state
+    const {teamBannerUrl, latestMatchDetails} = matchesData
+    return (
+      <div className="team-matches-container">
+        <img src={teamBannerUrl} alt="team banner" className="team-banner" />
+        <LatestMatch latestMatch={latestMatchDetails} />
+        <h1 className="latest-match-heading mt-3">Team Statistics</h1>
+        <PieChart data={this.generatePieChartData()} />
+        {this.renderRecentMatchesList()}
+        <Link to="/">
+          <button type="button" className="btn btn-outline-info mb-2">
+            Back
+          </button>
+        </Link>
+      </div>
+    )
+  }
+
   render() {
     const {isLoading} = this.state
     const {match} = this.props
@@ -86,7 +112,7 @@ class TeamMatches extends Component {
     return (
       <div className={`app-team-matches-container ${id}`}>
         {isLoading ? (
-          <div testid="loader">
+          <div>
             <Loader type="Oval" color="#ffffff" height={50} width={50} />
           </div>
         ) : (
